@@ -34,7 +34,8 @@ func run(args []string) error {
 	if err := fs.Parse(args); err != nil {
 		return err
 	} else if fs.NArg() == 0 {
-		return errors.New("path required")
+		usage()
+		return flag.ErrHelp
 	} else if *pkg == "" {
 		return errors.New("package name required")
 	}
@@ -402,20 +403,23 @@ func (w *hexWriter) Write(p []byte) (n int, err error) {
 }
 
 func usage() {
-	fmt.Println(`usage: genesis -pkg name [-o output] [-tags tags] path [paths]
+	fmt.Println(`usage: genesis [options] path [paths]
 
 Embeds listed assets in a Go file as hex-encoded strings.
 
 The following flags are available:
 
 	-pkg name
-		package name of the generated Go file.
+		Package name of the generated Go file. Required.
+
 	-o output
-		output filename for generated code.
+		Output filename for generated code. Optional.
 		(default stdout)
+
 	-C dir
-		execute genesis from dir.
+		Execute genesis from dir. Optional.
+
 	-tags tags
-		optional comma-delimited list of build tags.
+		Comma-delimited list of build tags. Optional.
 `)
 }
