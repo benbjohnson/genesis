@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/benbjohnson/genesis"
 )
@@ -48,7 +49,7 @@ func run(args []string) error {
 	// Find all matching files.
 	var paths []string
 	for _, arg := range fs.Args() {
-		a, err := expandPath(arg)
+		a, err := expand(arg)
 		if err != nil {
 			return err
 		}
@@ -68,50 +69,39 @@ func run(args []string) error {
 		w = f
 	}
 
-	// Write generated file.
-	if err := genesis.WriteHeader(w, *pkg, *tags); err != nil {
-		return err
-	} else if err := genesis.WriteAssetNames(w, paths); err != nil {
-		return err
-	} else if err := genesis.WriteAssetMap(w, paths); err != nil {
-		return err
-	} else if err := genesis.WriteFileType(w); err != nil {
-		return err
-	} else if err := genesis.WriteAssetFuncs(w); err != nil {
-		return err
-	} else if err := genesis.WriteFileSystem(w); err != nil {
-		return err
-	} else if err := genesis.WriteHashFuncs(w); err != nil {
+	enc := genesis.NewEncoder(w)
+	enc.Package = *pkg
+	enc.Tags = strings.Split(*tags, ",")
+
+	// Encode all assets.
+	for _, path := range paths {
+		// Fetch mod time from stats.
+		fi, err := os.Stat(path)
+		if err != nil {
+			return err
+		}
+
+		// Read entire file into memory.
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		// Encode asset to writer.
+		if err := enc.Encode(&genesis.Asset{
+			Name:    PrependSlash(filepath.ToSlash(path)),
+			Data:    data,
+			ModTime: fi.ModTime(),
+		}); err != nil {
+			return err
+		}
+	}
+
+	// Close out encoder.
+	if err := enc.Close(); err != nil {
 		return err
 	}
 	return nil
-}
-
-// expandPath converts path into a list of all files within path.
-// If path is a file then path is returned.
-func expandPath(path string) ([]string, error) {
-	if fi, err := os.Stat(path); err != nil {
-		return nil, err
-	} else if !fi.IsDir() {
-		return []string{path}, nil
-	}
-
-	// Read files in directory.
-	fis, err := ioutil.ReadDir(path)
-	if err != nil {
-		return nil, err
-	}
-
-	// Iterate over files and expand.
-	expanded := make([]string, 0, len(fis))
-	for _, fi := range fis {
-		a, err := expandPath(filepath.Join(path, fi.Name()))
-		if err != nil {
-			return nil, err
-		}
-		expanded = append(expanded, a...)
-	}
-	return expanded, nil
 }
 
 func usage() {
@@ -135,4 +125,38 @@ The following flags are available:
 		Comma-delimited list of build tags. Optional.
 
 `)
+}
+
+// expand converts path into a list of all files within path.
+// If path is a file then path is returned.
+func expand(path string) ([]string, error) {
+	if fi, err := os.Stat(path); err != nil {
+		return nil, err
+	} else if !fi.IsDir() {
+		return []string{path}, nil
+	}
+
+	// Read files in directory.
+	fis, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Iterate over files and expand.
+	expanded := make([]string, 0, len(fis))
+	for _, fi := range fis {
+		a, err := expand(filepath.Join(path, fi.Name()))
+		if err != nil {
+			return nil, err
+		}
+		expanded = append(expanded, a...)
+	}
+	return expanded, nil
+}
+
+func PrependSlash(s string) string {
+	if strings.HasPrefix(s, "/") {
+		return s
+	}
+	return "/" + s
 }
