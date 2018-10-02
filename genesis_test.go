@@ -47,6 +47,18 @@ func TestEncoder_Encode(t *testing.T) {
 			t.Fatalf("unexpected output, see: %s", tempfile(b))
 		}
 	})
+
+	t.Run("BuildTags", func(t *testing.T) {
+		var buf bytes.Buffer
+		enc := genesis.NewEncoder(&buf)
+		enc.Package = "mypkg"
+		enc.Tags = []string{"linux darwin", "386"}
+		if err := enc.Close(); err != nil {
+			t.Fatal(err)
+		} else if b := buf.Bytes(); !bytes.Equal(b, testdata("assets.build.txt")) {
+			t.Fatalf("unexpected output, see: %s", tempfile(b))
+		}
+	})
 }
 
 func testdata(name string) []byte {

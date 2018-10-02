@@ -71,7 +71,9 @@ func run(args []string) error {
 
 	enc := genesis.NewEncoder(w)
 	enc.Package = *pkg
-	enc.Tags = strings.Split(*tags, ",")
+	if *tags = strings.TrimSpace(*tags); *tags != "" {
+		enc.Tags = strings.Split(*tags, ",")
+	}
 
 	// Encode all assets.
 	for _, path := range paths {

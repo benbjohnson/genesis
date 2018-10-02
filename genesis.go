@@ -123,8 +123,10 @@ func (enc *Encoder) ensureHeaderWritten() error {
 	fmt.Fprintln(&buf, "")
 
 	// Write build tags.
-	for _, tag := range enc.Tags {
-		fmt.Fprintf(&buf, "// +build %s\n\n", strings.TrimSpace(tag))
+	if len(enc.Tags) > 0 {
+		for _, tag := range enc.Tags {
+			fmt.Fprintf(&buf, "// +build %s\n", strings.TrimSpace(tag))
+		}
 		fmt.Fprintln(&buf, "")
 	}
 
