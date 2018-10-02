@@ -99,8 +99,8 @@ This will output the following build tag comments at the top of the file:
 
 Your generated embedded assets Go file will include an implementation of
 [`http.FileSystem`](https://golang.org/pkg/net/http/#FileSystem) that can be
-passed to [`http.FileServer`]() to automatically serve your embedded assets
-through an `http.Handler`:
+passed to [`http.FileServer`](https://golang.org/pkg/net/http/#FileServer) to automatically serve your embedded assets
+through an [`http.Handler`](https://golang.org/pkg/net/http/#Handler):
 
 ```go
 http.Handle("/", http.FileServer(assets.FileSystem()))
@@ -123,7 +123,7 @@ fmt.Fprintf(w, `<script src="%s"></script>`, assets.AssetNameWithHash("bundle.js
 
 This will output something like the following:
 
-```
+```html
 <script src="/bundle-25318a5755cba4f4147fcb2a535ba1caaebade1a.js"></script>
 ```
 
