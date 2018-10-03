@@ -19,20 +19,28 @@ var assetMap = map[string]*File{
 var assetNames = []string{
 }
 
+// File represents a single embedded asset file.
 type File struct {
 	name    string
 	hash    string
-	size    int64
 	modTime time.Time
 	data    []byte
 }
 
-func (f *File) Name() string       { return f.name }
-func (f *File) Hash() string       { return f.hash }
-func (f *File) Size() int64        { return f.size }
-func (f *File) ModTime() time.Time { return f.modTime }
-func (f *File) Data() []byte       { return f.data }
+// Name returns the full path of the file.
+func (f *File) Name() string { return f.name }
 
+// Hash returns the SHA1 hash of the file's data.
+func (f *File) Hash() string { return f.hash }
+
+// ModTime returns the last modified date of the file when it was generated.
+func (f *File) ModTime() time.Time { return f.modTime }
+
+// Data returns the raw embedded data for the file.
+func (f *File) Data() []byte { return f.data }
+
+// Asset returns the raw data given an embedded filename.
+// Returns nil if the asset cannot be found.
 func Asset(name string) []byte {
 	if f := AssetFile(name); f != nil {
 		return f.Data()
@@ -40,6 +48,8 @@ func Asset(name string) []byte {
 	return nil
 }
 
+// AssetFile returns the File object given an embedded filename.
+// Returns nil if the asset cannot be found.
 func AssetFile(name string) *File {
 	if f := assetMap[name]; f != nil {
 		return f
@@ -51,10 +61,13 @@ func AssetFile(name string) *File {
 	return nil
 }
 
+// AssetNames returns a sorted list of all embedded asset filenames.
 func AssetNames() []string {
 	return assetNames
 }
 
+// AssetNameWithHash returns the asset name with a short hash before the extension.
+// Returns name if the asset cannot be found.
 func AssetNameWithHash(name string) string {
 	if f := AssetFile(name); f != nil {
 		return JoinNameHash(f.Name(), f.Hash()[:HashSuffixLength])
@@ -65,6 +78,8 @@ func AssetNameWithHash(name string) string {
 // HashSuffixLength is the length of the hash suffix used by AssetNameWithHash()
 var HashSuffixLength = 7
 
+// FileSystem returns a http.FileSystem implementation of the embedded files.
+// This can be used with http.FileServer().
 func FileSystem() http.FileSystem { return &httpFileSystem{} }
 
 type httpFileSystem struct{}
@@ -77,11 +92,12 @@ func (fs *httpFileSystem) Open(name string) (http.File, error) {
 	return newHTTPFile(f), nil
 }
 
-type httpFileServer struct{}
-
+// FileServer returns a handler that supports accessing assets with embedded hashes.
 func FileServer() http.Handler {
 	return &httpFileServer{}
 }
+
+type httpFileServer struct{}
 
 func (h *httpFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Path
@@ -113,7 +129,7 @@ type httpFile struct {
 
 func (f *httpFile) Close() error               { return nil }
 func (f *httpFile) Stat() (os.FileInfo, error) { return f, nil }
-func (f *httpFile) Size() int64                { return f.File.Size() }
+func (f *httpFile) Size() int64                { return int64(len(f.File.Data())) }
 func (f *httpFile) Mode() os.FileMode          { return 0444 }
 func (f *httpFile) ModTime() time.Time         { return time.Time{} }
 func (f *httpFile) IsDir() bool                { return false }
@@ -122,10 +138,12 @@ func (f *httpFile) Readdir(count int) ([]os.FileInfo, error) {
 	return nil, &os.PathError{Path: "/" + f.name, Err: os.ErrPermission}
 }
 
+// JoinNameHash returns a filename with hash embedded before the extension.
 func JoinNameHash(name, hash string) string {
 	return strings.TrimSuffix(name, path.Ext(name)) + "-" + hash + path.Ext(name)
 }
 
+// SplitNameHash separates name into its original filename and hash parts.
 func SplitNameHash(name string) (file, hash string) {
 	ext := path.Ext(name)
 	base := strings.TrimSuffix(name, ext)
@@ -136,6 +154,7 @@ func SplitNameHash(name string) (file, hash string) {
 	return file, hash
 }
 
+// HasNameHash returns true if name contains an embedded hash.
 func HasNameHash(name string) bool {
 	return hashSuffixRegex.MatchString(strings.TrimSuffix(name, path.Ext(name)))
 }

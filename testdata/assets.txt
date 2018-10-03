@@ -17,21 +17,18 @@ var assetMap = map[string]*File{
 	"/a.txt": &File{
 		name:    "/a.txt",
 		hash:    "61393939336533363437303638313661626133653235373137383530633236633963643064383964",
-		size:    3,
 		modTime: time.Unix(946684800, 0),
 		data:    []byte("\x61\x62\x63"),
 	},
 	"/a/b.txt": &File{
 		name:    "/a/b.txt",
 		hash:    "38383433643766393234313632313164653965626239363366663463653238313235393332383738",
-		size:    6,
 		modTime: time.Unix(978307200, 0),
 		data:    []byte("\x66\x6f\x6f\x62\x61\x72"),
 	},
 	"c/d/e": &File{
 		name:    "c/d/e",
 		hash:    "34633064326239353166666162643666396131303438396463343066633335366563316432366435",
-		size:    10,
 		modTime: time.Unix(1009843200, 0),
 		data:    []byte("\x74\x65\x73\x74\x69\x6e\x67\x31\x32\x33"),
 	},
@@ -43,20 +40,28 @@ var assetNames = []string{
 	"c/d/e",
 }
 
+// File represents a single embedded asset file.
 type File struct {
 	name    string
 	hash    string
-	size    int64
 	modTime time.Time
 	data    []byte
 }
 
-func (f *File) Name() string       { return f.name }
-func (f *File) Hash() string       { return f.hash }
-func (f *File) Size() int64        { return f.size }
-func (f *File) ModTime() time.Time { return f.modTime }
-func (f *File) Data() []byte       { return f.data }
+// Name returns the full path of the file.
+func (f *File) Name() string { return f.name }
 
+// Hash returns the SHA1 hash of the file's data.
+func (f *File) Hash() string { return f.hash }
+
+// ModTime returns the last modified date of the file when it was generated.
+func (f *File) ModTime() time.Time { return f.modTime }
+
+// Data returns the raw embedded data for the file.
+func (f *File) Data() []byte { return f.data }
+
+// Asset returns the raw data given an embedded filename.
+// Returns nil if the asset cannot be found.
 func Asset(name string) []byte {
 	if f := AssetFile(name); f != nil {
 		return f.Data()
@@ -64,6 +69,8 @@ func Asset(name string) []byte {
 	return nil
 }
 
+// AssetFile returns the File object given an embedded filename.
+// Returns nil if the asset cannot be found.
 func AssetFile(name string) *File {
 	if f := assetMap[name]; f != nil {
 		return f
@@ -75,10 +82,13 @@ func AssetFile(name string) *File {
 	return nil
 }
 
+// AssetNames returns a sorted list of all embedded asset filenames.
 func AssetNames() []string {
 	return assetNames
 }
 
+// AssetNameWithHash returns the asset name with a short hash before the extension.
+// Returns name if the asset cannot be found.
 func AssetNameWithHash(name string) string {
 	if f := AssetFile(name); f != nil {
 		return JoinNameHash(f.Name(), f.Hash()[:HashSuffixLength])
@@ -89,6 +99,8 @@ func AssetNameWithHash(name string) string {
 // HashSuffixLength is the length of the hash suffix used by AssetNameWithHash()
 var HashSuffixLength = 7
 
+// FileSystem returns a http.FileSystem implementation of the embedded files.
+// This can be used with http.FileServer().
 func FileSystem() http.FileSystem { return &httpFileSystem{} }
 
 type httpFileSystem struct{}
@@ -101,11 +113,12 @@ func (fs *httpFileSystem) Open(name string) (http.File, error) {
 	return newHTTPFile(f), nil
 }
 
-type httpFileServer struct{}
-
+// FileServer returns a handler that supports accessing assets with embedded hashes.
 func FileServer() http.Handler {
 	return &httpFileServer{}
 }
+
+type httpFileServer struct{}
 
 func (h *httpFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Path
@@ -137,7 +150,7 @@ type httpFile struct {
 
 func (f *httpFile) Close() error               { return nil }
 func (f *httpFile) Stat() (os.FileInfo, error) { return f, nil }
-func (f *httpFile) Size() int64                { return f.File.Size() }
+func (f *httpFile) Size() int64                { return int64(len(f.File.Data())) }
 func (f *httpFile) Mode() os.FileMode          { return 0444 }
 func (f *httpFile) ModTime() time.Time         { return time.Time{} }
 func (f *httpFile) IsDir() bool                { return false }
@@ -146,10 +159,12 @@ func (f *httpFile) Readdir(count int) ([]os.FileInfo, error) {
 	return nil, &os.PathError{Path: "/" + f.name, Err: os.ErrPermission}
 }
 
+// JoinNameHash returns a filename with hash embedded before the extension.
 func JoinNameHash(name, hash string) string {
 	return strings.TrimSuffix(name, path.Ext(name)) + "-" + hash + path.Ext(name)
 }
 
+// SplitNameHash separates name into its original filename and hash parts.
 func SplitNameHash(name string) (file, hash string) {
 	ext := path.Ext(name)
 	base := strings.TrimSuffix(name, ext)
@@ -160,6 +175,7 @@ func SplitNameHash(name string) (file, hash string) {
 	return file, hash
 }
 
+// HasNameHash returns true if name contains an embedded hash.
 func HasNameHash(name string) bool {
 	return hashSuffixRegex.MatchString(strings.TrimSuffix(name, path.Ext(name)))
 }
