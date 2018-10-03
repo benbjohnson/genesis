@@ -1,4 +1,4 @@
-genesis
+genesis [![Go Report Card](https://goreportcard.com/badge/github.com/benbjohnson/genesis)](https://goreportcard.com/report/github.com/benbjohnson/genesis) [![](https://godoc.org/github.com/benbjohnson/genesis?status.svg)](http://godoc.org/github.com/benbjohnson/genesis)
 =======
 
 Genesis is a utility for embedding static file assets into Go files to be
