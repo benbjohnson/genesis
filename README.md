@@ -148,7 +148,6 @@ type File struct {}
 
 func (f *File) Name() string
 func (f *File) Hash() string
-func (f *File) Size() int64
 func (f *File) ModTime() time.Time
 func (f *File) Data() []byte
 ```
@@ -181,13 +180,13 @@ func AssetNameWithHash(name string) string
 
 There are also utility functions for working with asset names and hashes. The
 `JoinNameHash()` function will build an asset name hash with the given name
-and hash. The `TrimNameHash()` function will return the base asset name from
-an asset name hash combination. The `HasNameHash()` returns true if a given name
+and hash. The `SplitNameHash()` function will return the base asset name and
+an asset name hash. The `HasNameHash()` returns true if a given name
 includes an asset hash.
 
 ```go
 func JoinNameHash(name, hash string) string
-func TrimNameHash(name string) string 
+func SplitNameHash(name string) string 
 func HasNameHash(name string) bool
 ```
 
