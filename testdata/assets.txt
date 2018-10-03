@@ -67,7 +67,9 @@ func Asset(name string) []byte {
 func AssetFile(name string) *File {
 	if f := assetMap[name]; f != nil {
 		return f
-	} else if f := assetMap[TrimNameHash(name)]; f != nil {
+	}
+	file, hash := SplitNameHash(name)
+	if f := assetMap[file]; f != nil && strings.HasPrefix(f.hash, hash) {
 		return f
 	}
 	return nil
@@ -79,10 +81,13 @@ func AssetNames() []string {
 
 func AssetNameWithHash(name string) string {
 	if f := AssetFile(name); f != nil {
-		return JoinNameHash(f.Name(), f.Hash())
+		return JoinNameHash(f.Name(), f.Hash()[:HashSuffixLength])
 	}
 	return name
 }
+
+// HashSuffixLength is the length of the hash suffix used by AssetNameWithHash()
+var HashSuffixLength = 7
 
 func FileSystem() http.FileSystem { return &httpFileSystem{} }
 
@@ -142,31 +147,21 @@ func (f *httpFile) Readdir(count int) ([]os.FileInfo, error) {
 }
 
 func JoinNameHash(name, hash string) string {
-	dir, file := path.Split(name)
-	if i := strings.Index(file, "."); i != -1 {
-		return path.Join(dir, file[0:i]+"-"+hash+file[i:])
-	}
-	return name + "-" + hash
+	return strings.TrimSuffix(name, path.Ext(name)) + "-" + hash + path.Ext(name)
 }
 
-func TrimNameHash(name string) string {
-	dir, file := path.Split(name)
-	pre, post := file, ""
-	if i := strings.Index(file, "."); i != -1 {
-		pre, post = file[0:i], file[i:]
+func SplitNameHash(name string) (file, hash string) {
+	ext := path.Ext(name)
+	base := strings.TrimSuffix(name, ext)
+	file = hashSuffixRegex.ReplaceAllLiteralString(base, "") + path.Ext(name)
+	if s := hashSuffixRegex.FindString(base); s != "" {
+		hash = s[1:]
 	}
-	if len(pre) < 41 || pre[len(pre)-41] != '-' || !hashRegex.MatchString(pre[len(pre)-40:]) {
-		return name
-	}
-	return path.Join(dir, pre[:len(pre)-41]+post)
+	return file, hash
 }
 
 func HasNameHash(name string) bool {
-	_, file := path.Split(name)
-	if i := strings.Index(file, "."); i != -1 {
-		file = file[0:i]
-	}
-	return len(file) >= 41 && file[len(file)-41] == '-' && hashRegex.MatchString(file[len(file)-40:])
+	return hashSuffixRegex.MatchString(strings.TrimSuffix(name, path.Ext(name)))
 }
 
-var hashRegex = regexp.MustCompile("^[0-9a-f]+$")
+var hashSuffixRegex = regexp.MustCompile("-[0-9a-f]{7,}$")
