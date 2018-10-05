@@ -2,7 +2,7 @@ package genesis
 
 import (
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
@@ -22,9 +22,9 @@ type Asset struct {
 	ModTime time.Time
 }
 
-// Hash returns the hex-encoded SHA1 hash of the asset data.
+// Hash returns the hex-encoded SHA256 hash of the asset data.
 func (a *Asset) Hash() string {
-	return fmt.Sprintf("%x", sha1.Sum(a.Data))
+	return fmt.Sprintf("%x", sha256.Sum256(a.Data))
 }
 
 // Encoder encodes asset data as an embedded Go file.
@@ -190,7 +190,7 @@ func (enc *Encoder) writeFileType() error {
 	fmt.Fprintln(&buf, `// Name returns the full path of the file.`)
 	fmt.Fprintln(&buf, `func (f *File) Name() string { return f.name }`)
 	fmt.Fprintln(&buf, ``)
-	fmt.Fprintln(&buf, `// Hash returns the SHA1 hash of the file's data.`)
+	fmt.Fprintln(&buf, `// Hash returns the SHA256 hash of the file's data.`)
 	fmt.Fprintln(&buf, `func (f *File) Hash() string { return f.hash }`)
 	fmt.Fprintln(&buf, ``)
 	fmt.Fprintln(&buf, `// ModTime returns the last modified date of the file when it was generated.`)

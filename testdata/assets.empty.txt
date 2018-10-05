@@ -30,7 +30,7 @@ type File struct {
 // Name returns the full path of the file.
 func (f *File) Name() string { return f.name }
 
-// Hash returns the SHA1 hash of the file's data.
+// Hash returns the SHA256 hash of the file's data.
 func (f *File) Hash() string { return f.hash }
 
 // ModTime returns the last modified date of the file when it was generated.
