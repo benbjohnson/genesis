@@ -68,7 +68,7 @@ func (enc *Encoder) Encode(asset *Asset) error {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "	%q: &File{\n", asset.Name)
 	fmt.Fprintf(&buf, "		name:    %q,\n", asset.Name)
-	fmt.Fprintf(&buf, "		hash:    \"%x\",\n", asset.Hash())
+	fmt.Fprintf(&buf, "		hash:    %q,\n", asset.Hash())
 	fmt.Fprintf(&buf, "		modTime: time.Unix(%d, %d),\n", sec, nsec)
 	fmt.Fprintf(&buf, "		data:    []byte(\"%s\"),\n", string(hex(asset.Data)))
 	fmt.Fprintf(&buf, "	},\n")
