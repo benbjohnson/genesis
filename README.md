@@ -3,7 +3,7 @@ genesis [![Go Report Card](https://goreportcard.com/badge/github.com/benbjohnson
 
 Genesis is a utility for embedding static file assets into Go files to be
 included in static compilation. Genesis includes support for `http.FileSystem`
-as well versioning via SHA1 hashes.
+as well versioning via SHA256 hashes.
 
 
 ## Installation
@@ -109,7 +109,7 @@ http.Handle("/", http.FileServer(assets.FileSystem()))
 #### Cache control
 
 Your embedded assets Go file also includes a method for returning the filename
-with an included SHA1 hash. This hash will change whenever the contents of the
+with an included SHA256 hash. This hash will change whenever the contents of the
 file changes so the `http.FileSystem` will tell the browser to cache the file
 indefinitely using the `Cache-Control` header.
 
@@ -127,7 +127,7 @@ This will output something like the following:
 <script src="/bundle-25318a5755cba4f4147fcb2a535ba1caaebade1a.js"></script>
 ```
 
-When a file is requested with a SHA1 hash it will be cached indefinitely which
+When a file is requested with a SHA256 hash it will be cached indefinitely which
 leads to improved web site latency on return visits.
 
 
@@ -170,7 +170,7 @@ func AssetNames() []string
 
 #### Content hash functions
 
-The `AssetNameWithHash()` function will return a given asset name with its SHA1
+The `AssetNameWithHash()` function will return a given asset name with its SHA256
 content hash included. This is useful for embedding in HTML source names when
 combining with the included `http.FileSystem` implementation.
 
