@@ -91,13 +91,10 @@ func AssetNames() []string {
 // Returns name if the asset cannot be found.
 func AssetNameWithHash(name string) string {
 	if f := AssetFile(name); f != nil {
-		return JoinNameHash(f.Name(), f.Hash()[:HashSuffixLength])
+		return JoinNameHash(f.Name(), f.Hash())
 	}
 	return name
 }
-
-// HashSuffixLength is the length of the hash suffix used by AssetNameWithHash()
-var HashSuffixLength = 7
 
 // FileSystem returns a http.FileSystem implementation of the embedded files.
 // This can be used with http.FileServer().

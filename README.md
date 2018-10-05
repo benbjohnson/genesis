@@ -124,7 +124,7 @@ fmt.Fprintf(w, `<script src="%s"></script>`, assets.AssetNameWithHash("bundle.js
 This will output something like the following:
 
 ```html
-<script src="/bundle-25318a5755cba4f4147fcb2a535ba1caaebade1a.js"></script>
+<script src="/bundle-c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2.js"></script>
 ```
 
 When a file is requested with a SHA256 hash it will be cached indefinitely which
